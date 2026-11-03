@@ -8,7 +8,6 @@ import { Opener, SidebarPlusEditorService } from './editorLauncher.service'
 import { readRemoteEntry } from './remoteEntry'
 import { SidebarPlusTempFilesService } from './tempFiles.service'
 import { SftpTransfers } from './transfers'
-import { SidebarPlusI18nService } from './i18n'
 import { MemoryFileDownload } from './sftpLocalTransfer'
 
 /**
