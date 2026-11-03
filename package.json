@@ -1,7 +1,7 @@
 {
-  "name": "tabby-better-sidebar",
+  "name": "tabby-sidebar-lebedev",
   "version": "1.0.10",
-  "description": "Enhanced connection sidebar for Tabby: a contextual SFTP browser inside the sidebar itself, pinned favorites, live connection status, active sessions, workspaces, SSH tunnels, drag & drop (including dragging remote files out to the OS), a transfer manager, and a custom icon picker.",
+  "description": "Enhanced connection sidebar for Tabby: a contextual SFTP browser inside the sidebar itself, pinned favorites, live connection status, active sessions, workspaces, SSH tunnels, drag & drop (including dragging remote files out to the OS), a transfer manager, a custom icon picker, a built-in text editor for remote files, Linux system information and SFTP terminal directory tracking.",
   "keywords": [
     "tabby-plugin",
     "tabby",
@@ -31,32 +31,42 @@
     "notes",
     "transfer-manager",
     "connection-status",
-    "better-tabby"
+    "better-tabby",
+    "tabby-sidebar-lebedev",
+    "better-sidebar-lebedev",
+    "linux-system-info",
+    "system-information",
+    "sftp-directory-tracking",
+    "built-in-editor",
+    "text-editor"
   ],
   "main": "dist/index.js",
   "typings": "dist/src/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/TooMuhtsh/tabby-better-sidebar.git"
+    "url": "git+https://github.com/dlebedev/tabby-better-sidebar-lebedev.git"
   },
-  "homepage": "https://github.com/TooMuhtsh/tabby-better-sidebar#readme",
+  "homepage": "https://github.com/dlebedev/tabby-better-sidebar-lebedev#readme",
   "bugs": {
-    "url": "https://github.com/TooMuhtsh/tabby-better-sidebar/issues"
+    "url": "https://github.com/dlebedev/tabby-better-sidebar-lebedev/issues"
   },
   "scripts": {
     "build": "webpack --progress --color",
     "build:prod": "webpack --progress --color --mode production && node scripts/strip-source-maps.js",
     "watch": "webpack --progress --color --watch",
+    "test:text-document": "node scripts/test-text-document-tools.js",
+    "test:dashboard-icons": "node scripts/test-dashboard-icon-optimizer.js",
     "lint:airules": "html-validate \".AIRules/**/*.html\"",
     "lint:i18n": "node scripts/lint-i18n.js",
     "prepublishOnly": "npm run build:prod"
   },
   "files": [
     "dist",
+    "README.fr.md",
     "THIRD-PARTY-NOTICES.md",
     "CHANGELOG.md"
   ],
-  "author": "TooMuhtsh",
+  "author": "dlebedev (fork of TooMuhtsh/tabby-better-sidebar, with the feature set of wzwwzb/tabby-better-sidebar-plus)",
   "license": "MIT",
   "devDependencies": {
     "@angular/animations": "^15.0.0",
@@ -70,24 +80,28 @@
     "@ng-bootstrap/ng-bootstrap": "^14.2.0",
     "@types/node": "^18.19.0",
     "@types/webpack-env": "^1.16.0",
+    "@xmldom/xmldom": "^0.9.12",
     "apply-loader": "^2.0.0",
     "css-loader": "^6.8.0",
     "dompurify": "^3.4.12",
     "filesize": "^11.0.22",
     "fuzzy-search": "^3.2.1",
     "html-validate": "^11.6.0",
+    "parse5": "^7.3.0",
     "pug": "^2.0.4",
     "pug-loader": "^2.4.0",
     "rxjs": "^7.3.0",
     "sass": "^1.60.0",
     "sass-loader": "^13.2.0",
     "style-loader": "^3.3.0",
+    "svgo": "^4.1.0",
     "tabby-core": "^1.0.231-nightly.0",
     "tabby-settings": "^1.0.231-nightly.0",
     "tabby-terminal": "^1.0.231-nightly.0",
     "ts-loader": "^9.4.0",
     "typescript": "^4.9.5",
     "webpack": "^5.24.4",
-    "webpack-cli": "^4.5.0"
+    "webpack-cli": "^4.5.0",
+    "yaml": "^2.9.1"
   }
 }

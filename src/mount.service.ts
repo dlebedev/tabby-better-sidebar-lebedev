@@ -8,6 +8,7 @@ import { SidebarPlusVisibilityService } from './visibility.service'
 
 /** Set on `body` while Tabby's own transfers menu is to stay out of the way. */
 const HIDE_NATIVE_TRANSFERS_CLASS = 'sidebar-plus-hide-native-transfers'
+const HIDE_NATIVE_SFTP_BUTTON_CLASS = 'sidebar-plus-hide-native-sftp-button'
 
 @Injectable({ providedIn: 'root' })
 export class SidebarPlusMountService {
@@ -64,7 +65,7 @@ export class SidebarPlusMountService {
         // seconds, and this is exactly the kind of failure someone comes back
         // to diagnose later.
         console.error(
-            '[tabby-better-sidebar] Contrôle de compatibilité échoué :',
+            '[tabby-sidebar-lebedev] Contrôle de compatibilité échoué :',
             report.failed.map(p => p.id).join(', '),
             '— cette version de Tabby ne fournit plus ce que le plugin attend.',
         )
@@ -98,6 +99,11 @@ export class SidebarPlusMountService {
         const panelShown = (sp?.showSftp ?? true) && (sp?.showTransfers ?? true)
         const hide = enabled && panelShown && (sp?.hideNativeTransfersMenu ?? true)
         document.body.classList.toggle(HIDE_NATIVE_TRANSFERS_CLASS, hide)
+
+        // Restore Tabby's own entry when the plugin or the SFTP view is off.
+        const sftpShown = sp?.showSftp ?? true
+        const hideSftpButton = enabled && sftpShown && (sp?.hideNativeSftpButton ?? false)
+        document.body.classList.toggle(HIDE_NATIVE_SFTP_BUTTON_CLASS, hideSftpButton)
     }
 
     private mount (): void {
@@ -110,7 +116,7 @@ export class SidebarPlusMountService {
             // will not have called us. Reaching here means the container went
             // away *after* startup — nothing to say twice, but never a silent
             // return either.
-            console.error('[tabby-better-sidebar] Conteneur de montage introuvable, sidebar non montée.')
+            console.error('[tabby-sidebar-lebedev] Conteneur de montage introuvable, sidebar non montée.')
             return
         }
         // Switching the plugin back on in the settings is someone looking for

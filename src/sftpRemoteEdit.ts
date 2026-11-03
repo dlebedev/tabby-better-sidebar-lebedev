@@ -8,6 +8,8 @@ import { Opener, SidebarPlusEditorService } from './editorLauncher.service'
 import { readRemoteEntry } from './remoteEntry'
 import { SidebarPlusTempFilesService } from './tempFiles.service'
 import { SftpTransfers } from './transfers'
+import { SidebarPlusI18nService } from './i18n'
+import { MemoryFileDownload } from './sftpLocalTransfer'
 
 /**
  * How the local copy is handed over once downloaded.
@@ -16,6 +18,13 @@ import { SftpTransfers } from './transfers'
  * explicit context-menu escape hatch (Windows' own "Open with..." dialog).
  */
 export type OpenMode = 'editor'|'openWith'
+
+/** Opens the built-in editor and saves back to the remote file through the callback. */
+export type BuiltinTextEditor = (
+    item: SFTPFile,
+    text: string,
+    save: (text: string) => Promise<boolean>,
+) => Promise<void>
 
 /** The live SFTP transport, borrowed from the one member that publicly exposes its type. */
 type SftpSession = SFTPPanelComponent['sftp']
@@ -33,6 +42,13 @@ interface RemoteStamp {
      * file's permissions, it silently reverts them.
      */
     mode: number
+}
+
+/** The built-in text area displays LF and restores the file's original BOM and line endings on save. */
+interface Utf8TextFile {
+    text: string
+    bom: boolean
+    lineEnding: '\n'|'\r\n'
 }
 
 /** Asks the user a yes/no question. Supplied by the panel, which owns the HTML modal (piège #42). */
@@ -53,12 +69,13 @@ interface EditSession {
 }
 
 /**
- * Opens a remote file in the configured editor, and sends it back on every
- * save.
+ * Handles both round trips to a remote file: the built-in editor and the
+ * system editor.
  *
- * The file is copied to a private temp directory, handed to the editor, and
- * watched; each save re-uploads it. Nothing is ever silent — every upload
- * raises a notification, because this writes to a live server.
+ * In system-editor mode a temporary file is watched and uploaded once the
+ * external editor saves; in built-in mode the upload happens only when the
+ * user confirms the save. Both flows first check whether the remote file was
+ * changed by something else.
  *
  * Never `shell.openPath()`, which is what this used to do: opening by OS
  * association *runs* an executable, or a script whose extension is bound to an
@@ -76,6 +93,9 @@ interface EditSession {
  *     no warning at all — the failure mode that actually loses someone's work.
  */
 export class SftpRemoteEditor {
+    /** The built-in editor only handles small UTF-8 text, keeping large logs out of a textarea. */
+    private static readonly MAX_BUILTIN_TEXT_BYTES = 2 * 1024 * 1024
+
     private sessions = new Map<string, EditSession>()
     /** Sends still in flight — see `track()`. */
     private uploads = new Set<Promise<void>>()
@@ -87,6 +107,7 @@ export class SftpRemoteEditor {
         private temp: SidebarPlusTempFilesService,
         private confirm: ConfirmFn,
         private zone: NgZone,
+        private openBuiltinEditor: BuiltinTextEditor,
         private i18n: SidebarPlusI18nService,
     ) { }
 
@@ -105,8 +126,8 @@ export class SftpRemoteEditor {
         return this.zone.run(work)
     }
 
-    /** Hands a local copy over. The opener is settled by `edit()` before anything is downloaded. */
-    private open (localPath: string, opener: Opener): void {
+    /** Hands the temporary copy to an external editor; the opening mode is resolved before the download. */
+    private open (localPath: string, opener: Exclude<Opener, { kind: 'builtin' }>): void {
         if (opener.kind === 'openWith') {
             this.editors.openWith(localPath, opener.learn)
             return
@@ -121,15 +142,16 @@ export class SftpRemoteEditor {
      * go unnoticed.
      */
     async edit (sftp: SftpSession, item: SFTPFile, mode: OpenMode = 'editor'): Promise<void> {
-        // Settled first, and deliberately before the temp dir and the
-        // download: on a platform with no "open with" dialog this raises a file
-        // picker that can be cancelled, and bailing out later would leave a
-        // downloaded copy, a live fs.watch and a registered session for a file
-        // nobody ever opened.
+        // Resolve the system editor and handle a cancellation first, so no
+        // downloaded copy or file watcher is left behind.
         const opener: Opener|null = mode === 'openWith'
             ? { kind: 'openWith' }
             : await this.editors.resolveOpener()
         if (!opener) {
+            return
+        }
+        if (opener.kind === 'builtin') {
+            await this.editBuiltin(sftp, item)
             return
         }
 
@@ -176,6 +198,126 @@ export class SftpRemoteEditor {
         this.notifications.notice(this.i18n.t('{name} opened — every save will be sent back to the server', { name: item.name }))
     }
 
+    /** Edits UTF-8 text inside Tabby; the server file is overwritten only once the save is confirmed. */
+    private async editBuiltin (sftp: SftpSession, item: SFTPFile): Promise<void> {
+        const limit = SftpRemoteEditor.MAX_BUILTIN_TEXT_BYTES
+        if (item.size > limit) {
+            this.notifications.error(this.i18n.t('Cannot open this file in the built-in editor. It must be UTF-8 text no larger than {size}.', {
+                size: '2 MiB',
+            }))
+            return
+        }
+
+        const localDir = await this.temp.makeDir('edit')
+        const localPath = path.join(localDir, item.name)
+        try {
+            let remote: RemoteStamp
+            try {
+                remote = await this.remoteStamp(sftp, item)
+            } catch (e) {
+                this.notifications.error(this.i18n.t('Could not read the remote version of {name}.', { name: item.name }), String(e))
+                return
+            }
+            if (remote.size > limit) {
+                this.notifications.error(this.i18n.t('Cannot open this file in the built-in editor. It must be UTF-8 text no larger than {size}.', {
+                    size: '2 MiB',
+                }))
+                return
+            }
+
+            const limitMessage = this.i18n.t('Cannot open this file in the built-in editor. It must be UTF-8 text no larger than {size}.', {
+                size: '2 MiB',
+            })
+            const download = new MemoryFileDownload(item.name, remote.size, remote.mode, limit, limitMessage)
+            try {
+                await sftp.download(item.fullPath, download)
+            } catch (e) {
+                this.notifications.error(this.i18n.t('Could not load {name} from the server.', { name: item.name }), String(e))
+                return
+            }
+
+            const buffer = download.getBuffer()
+            if (buffer.length > limit) {
+                this.notifications.error(this.i18n.t('Cannot open this file in the built-in editor. It must be UTF-8 text no larger than {size}.', {
+                    size: '2 MiB',
+                }))
+                return
+            }
+
+            let file: Utf8TextFile
+            try {
+                file = this.decodeUtf8Text(buffer)
+            } catch {
+                this.notifications.error(this.i18n.t('Cannot open this file in the built-in editor. It must be UTF-8 text no larger than {size}.', {
+                    size: '2 MiB',
+                }))
+                return
+            }
+
+            await this.openBuiltinEditor(item, file.text, async nextText => {
+                if (nextText === file.text) {
+                    return true
+                }
+                const normalizedText = nextText.replace(/\r\n?/g, '\n')
+                const remoteText = `${file.bom ? '\uFEFF' : ''}${normalizedText.replace(/\n/g, file.lineEnding)}`
+                if (Buffer.byteLength(remoteText, 'utf8') > limit) {
+                    this.notifications.error(this.i18n.t('Cannot open this file in the built-in editor. It must be UTF-8 text no larger than {size}.', {
+                        size: '2 MiB',
+                    }))
+                    return false
+                }
+
+                try {
+                    const now = await this.remoteStamp(sftp, item)
+                    if (this.changed(remote, now) && !await this.inZone(() => this.confirm(
+                        this.i18n.t('{name} changed on the server after opening it. Overwrite the server version?', { name: item.name }),
+                        this.i18n.t('Overwrite'),
+                    ))) {
+                        this.inZone(() => this.notifications.notice(this.i18n.t('{name} was not saved because the server version changed.', { name: item.name })))
+                        return false
+                    }
+
+                    await fs.promises.writeFile(localPath, remoteText, 'utf8')
+                    const localStat = await fs.promises.stat(localPath)
+                    await this.transfers.upload(sftp, item.fullPath, localPath, item.name, localStat.size, now.mode)
+                    remote = await this.remoteStamp(sftp, item)
+                    this.inZone(() => this.notifications.notice(this.i18n.t('{name} saved to the server', { name: item.name })))
+                    return true
+                } catch (e) {
+                    this.inZone(() => this.notifications.error(
+                        this.i18n.t('Could not save to the server. Check the notification and try again.'),
+                        String(e),
+                    ))
+                    return false
+                }
+            })
+        } catch (e) {
+            this.notifications.error(
+                this.i18n.t('Could not open the built-in editor for {name}.', { name: item.name }),
+                String(e),
+            )
+        } finally {
+            await this.temp.remove(localDir)
+        }
+    }
+
+    /** Rejects binary and invalid UTF-8 so corrupt text is never written back to the server. */
+    private decodeUtf8Text (buffer: Buffer): Utf8TextFile {
+        if (buffer.includes(0)) {
+            throw new Error('binary')
+        }
+        const decoded = buffer.toString('utf8')
+        if (!Buffer.from(decoded, 'utf8').equals(buffer)) {
+            throw new Error('invalid-utf8')
+        }
+        const bom = decoded.startsWith('\uFEFF')
+        return {
+            text: decoded.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n'),
+            bom,
+            lineEnding: decoded.includes('\r\n') ? '\r\n' : '\n',
+        }
+    }
+
     /**
      * Reopening a file already open here.
      *
@@ -186,7 +328,7 @@ export class SftpRemoteEditor {
      * never is without a decision: no automatic answer can be right when both
      * sides changed.
      */
-    private async reopen (sftp: SftpSession, item: SFTPFile, session: EditSession, opener: Opener): Promise<void> {
+    private async reopen (sftp: SftpSession, item: SFTPFile, session: EditSession, opener: Exclude<Opener, { kind: 'builtin' }>): Promise<void> {
         const now = await this.remoteStamp(sftp, item)
         if (!this.changed(session.remote, now)) {
             this.open(session.localPath, opener)

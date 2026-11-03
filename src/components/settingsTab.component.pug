@@ -272,6 +272,19 @@
               (ngModelChange)="setBlock('showTunnels', $event)"
             )
 
+      .feature-card(*ngSwitchCase="'systemInfo'", [class.off]="!blockOn('showSystemInfo', 'ssh-tab')")
+        .form-line.block-switch
+          .header
+            .title {{ lblSystemInformation }} #[i.fas.fa-info-circle.info-hint([title]='lblSystemInformationHint')]
+            .description {{ lblSystemInformationDesc }}
+            .description.text-warning(*ngIf="!hostHas('ssh-tab')") {{ lblUnavailable }}
+          .control
+            toggle(
+              [ngModel]="blockOn('showSystemInfo', 'ssh-tab')",
+              [disabled]="!hostHas('ssh-tab')",
+              (ngModelChange)="setBlock('showSystemInfo', $event)"
+            )
+
       //- La plus outillée : elle prend toute la largeur de la grille, et ses
           options passent elles-mêmes sur deux colonnes quand la place le permet.
       .feature-card.wide(*ngSwitchCase="'sftp'", [class.off]="!sftpOn")
@@ -287,6 +300,26 @@
               (ngModelChange)="setBlock('showSftp', $event)"
             )
         .feature-card-body.two-columns(*ngIf='sftpOn')
+          .form-line
+            .header
+              .title {{ lblHideNativeSftpButton }} #[i.fas.fa-info-circle.info-hint([title]='lblHideNativeSftpButtonHint')]
+              .description {{ lblHideNativeSftpButtonDesc }}
+            .control
+              toggle(
+                [ngModel]='hideNativeSftpButton',
+                (ngModelChange)='setHideNativeSftpButton($event)'
+              )
+
+          .form-line
+            .header
+              .title {{ lblPreferSystemEditor }} #[i.fas.fa-info-circle.info-hint([title]='lblPreferSystemEditorHint')]
+              .description {{ lblPreferSystemEditorDesc }}
+            .control
+              toggle(
+                [ngModel]='preferSystemEditor',
+                (ngModelChange)='setPreferSystemEditor($event)'
+              )
+
           //- `stacked` : le chemin passe sous son intitulé et prend toute la largeur.
               Sur la même ligne que les deux boutons, il ne restait au champ que
               quelques caractères visibles : un chemin d'exécutable n'y tenait pas.

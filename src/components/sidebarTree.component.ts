@@ -169,8 +169,8 @@ export class SidebarPlusTreeComponent implements OnInit, OnDestroy, AfterViewChe
     /** Shown in the footer bar next to the plugin name. */
     readonly pluginVersion = PLUGIN_VERSION
     /** Footer links. Constants rather than template literals: the template must not compute (piège #54). */
-    readonly repositoryUrl = 'https://github.com/TooMuhtsh/tabby-better-sidebar'
-    readonly authorUrl = 'https://github.com/TooMuhtsh?tab=repositories'
+    readonly repositoryUrl = 'https://github.com/dlebedev/tabby-better-sidebar-lebedev'
+    readonly authorUrl = 'https://github.com/dlebedev?tab=repositories'
     profileGroups: PartialProfileGroup<ProfileGroup>[] = []
     /** What the template renders: `baseRootGroups`, narrowed to the open profiles while the "Actifs" tab is on — see setRootGroups(). */
     rootGroups: PartialProfileGroup<ProfileGroup>[] = []
@@ -261,6 +261,10 @@ export class SidebarPlusTreeComponent implements OnInit, OnDestroy, AfterViewChe
      * field alone.
      */
     sftpMode = false
+
+    // The new view follows the current SSH focus and, like SFTP, keeps the
+    // choice only for this run.
+    systemInfoMode = false
 
     /**
      * Groups (isTemplate/blacklist already filtered, like profileGroups) but
@@ -1866,6 +1870,10 @@ export class SidebarPlusTreeComponent implements OnInit, OnDestroy, AfterViewChe
         return (this.config.store.sidebarPlus?.showSftp ?? true) && hostSupports('sftp-panel')
     }
 
+    get showSystemInfo (): boolean {
+        return (this.config.store.sidebarPlus?.showSystemInfo ?? true) && hostSupports('ssh-tab')
+    }
+
     /**
      * The transfers panel, which belongs to the SFTP view and is switched off
      * with it.
@@ -1913,6 +1921,9 @@ export class SidebarPlusTreeComponent implements OnInit, OnDestroy, AfterViewChe
         if (!this.showSftp && this.sftpMode) {
             this.sftpMode = false
         }
+        if (!this.showSystemInfo && this.systemInfoMode) {
+            this.systemInfoMode = false
+        }
         if (this.showWorkspaces) {
             // Coming back on: restore the selection the user last made, which
             // the branch below deliberately left in localStorage.
@@ -1949,9 +1960,21 @@ export class SidebarPlusTreeComponent implements OnInit, OnDestroy, AfterViewChe
             return
         }
         this.sftpMode = on
+        this.systemInfoMode = false
         if (on) {
             // Leaving this on would put the sidebar back into the hidden-items
             // panel — not the tree — the next time SFTP is switched off.
+            this.showHiddenPanel = false
+        }
+    }
+
+    setSystemInfoMode (on: boolean): void {
+        if (on && !this.showSystemInfo) {
+            return
+        }
+        this.systemInfoMode = on
+        this.sftpMode = false
+        if (on) {
             this.showHiddenPanel = false
         }
     }
@@ -3249,6 +3272,14 @@ export class SidebarPlusTreeComponent implements OnInit, OnDestroy, AfterViewChe
         this.sftpPanel?.unfreeze()
         focusTab(this.app, session.tab)
         this.setSftpMode(true)
+    }
+
+    /** Follows the chosen session before opening its system information view. */
+    openSessionSystemInfo (session: ActiveSession, event: MouseEvent): void {
+        event.preventDefault()
+        event.stopPropagation()
+        focusTab(this.app, session.tab)
+        this.setSystemInfoMode(true)
     }
 
     ////// MULTI-SELECTION (profiles only, never groups) //////

@@ -40,3 +40,12 @@ body:has(sidebar-plus-tree.sidebar-plus-mac-inset:not([hidden])) .tab-bar > .ins
     display: none;
 }
 
+// Hide both Tabby's native button and the toolbar replacement button that the
+// SFTP+ plugin injects when it is installed.
+body.sidebar-plus-hide-native-sftp-button terminal-toolbar button:has(> i.fa-folder-open),
+// The native SFTP button sits right after "Reconnect"; match by Tabby's current
+// toolbar order as a fallback.
+body.sidebar-plus-hide-native-sftp-button terminal-toolbar > button:nth-of-type(2),
+body.sidebar-plus-hide-native-sftp-button button[data-tabby-sftp-plus-button="1"] {
+    display: none !important;
+}

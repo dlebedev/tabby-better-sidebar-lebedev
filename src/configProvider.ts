@@ -130,11 +130,13 @@ export class SidebarPlusConfigProvider extends ConfigProvider {
             // the name column is always shown and never listed here. See
             // SidebarPlusSftpBrowserComponent.AVAILABLE_COLUMNS for the ids.
             sftpColumns: ['size', 'date', 'mode'] as string[],
-            // Editor a double-clicked remote file opens in — never the OS
-            // association, which would *run* an executable instead of editing
-            // it. Empty until the first double-click asks for one (or the
-            // settings tab sets it). Prefixed like its SFTP siblings above.
+            // Program path used once the user enables system-editor mode; the
+            // built-in editor is the default way to edit.
             sftpEditorPath: '',
+            // New installs edit inside the plugin by default; users from older
+            // versions who already configured a system editor path keep their
+            // previous behaviour.
+            sftpPreferSystemEditor: undefined as boolean|undefined,
             // Which button of the SFTP delete confirmation holds the focus,
             // i.e. what `Entrée` triggers. Defaults to the non-destructive
             // answer: a confirmation whose default is "yes" deletes on a reflex
@@ -160,6 +162,9 @@ export class SidebarPlusConfigProvider extends ConfigProvider {
             // trigger itself, and the grace period it deliberately does not
             // shortcut.
             sftpAutoReturnToProfiles: true,
+            // Initial state of terminal-directory tracking; once the user
+            // toggles it, their own choice is what gets saved.
+            sftpFollowTerminalDirectory: true,
             // Seconds between two latency probes of each live SSH session, 0 to
             // disable. Off by default, like the SFTP auto-refresh above and for
             // a comparable reason: a probe is a real request sent to a real
@@ -195,6 +200,9 @@ export class SidebarPlusConfigProvider extends ConfigProvider {
             // every transfer, so keeping both means a popup covering the tabs on
             // top of a panel that already says it. Untick to get it back.
             hideNativeTransfersMenu: true,
+            // Tabby's native SFTP button is kept by default; hiding it is an
+            // explicit user choice.
+            hideNativeSftpButton: false,
             // Per-block switches. All default to true: these blocks are what
             // was asked for and built, so defaulting them off would make
             // delivered features vanish on a plugin update.
@@ -229,6 +237,9 @@ export class SidebarPlusConfigProvider extends ConfigProvider {
             showRecentProfiles: false,
             showTunnels: true,
             showSftp: true,
+            // Linux server metrics are collected read-only over a separate SSH
+            // command channel.
+            showSystemInfo: true,
             showTransfers: true,
             showWorkspaces: true,
             // How `.workspace-bar` itself is shown once showWorkspaces is on:

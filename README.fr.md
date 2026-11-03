@@ -1,27 +1,51 @@
 <div align="center">
 
-# 📁 tabby-better-sidebar
+# 📁 tabby-sidebar-lebedev
 
 **Sidebar de connexions enrichie pour [Tabby](https://tabby.sh)** — favoris
 épinglés, statut de connexion en direct, glisser-déposer, et un explorateur
 SFTP contextuel qui vit *dans* la sidebar plutôt que dans un panneau docké à
 part.
 
-[English](README.md) · **Français**
+**Français** · [English](README.md)
 
-[![License: MIT](https://img.shields.io/github/license/TooMuhtsh/tabby-better-sidebar?color=0d9488)](LICENSE)
-[![Part of Better Tabby](https://img.shields.io/badge/part%20of-Better%20Tabby-0d9488)](#-better-tabby-la-famille-de-plugins)
+[![License: MIT](https://img.shields.io/github/license/dlebedev/tabby-better-sidebar-lebedev?color=0d9488)](LICENSE)
+[![Compatible avec Better Tabby](https://img.shields.io/badge/Better%20Tabby-compatible-0d9488)](#-compatibilite-better-tabby)
 
 </div>
 
 ---
 
+## Origine du fork et ajouts
+
+Ce dépôt est un fork indépendant de
+[TooMuhtsh/tabby-better-sidebar](https://github.com/TooMuhtsh/tabby-better-sidebar).
+La sidebar d'origine et son socle fonctionnel viennent du projet amont ; ce
+fork conserve ce travail et y ajoute :
+
+- Une vue des informations système Linux pour les sessions SSH.
+- Le suivi facultatif du répertoire courant du terminal dans SFTP, avec
+  mémorisation du choix après redémarrage.
+- Un réglage pour masquer le bouton SFTP natif de Tabby et le bouton de
+  remplacement SFTP+, si ce plugin est installé.
+- Un éditeur de texte intégré pour les fichiers texte UTF-8 distants, avec
+  vérification et formatage JSON/YAML/INI/XML/HTML.
+
+Ces ajouts proviennent du fork
+[wzwwzb/tabby-better-sidebar-plus](https://github.com/wzwwzb/tabby-better-sidebar-plus),
+fusionné ici.
+
+La licence MIT du projet amont et les notices des composants tiers sont
+conservées. Ce fork est maintenu indépendamment et n'est pas une version
+officielle du projet amont.
+
+**Compatibilité :** il est déconseillé d'activer ce fork en même temps que le
+plugin amont `tabby-better-sidebar`, car leurs sidebars et commandes SFTP se
+recoupent.
+
 Tabby possède une sidebar de profils native, mais elle n'est pas exportée pour
-qu'un plugin tiers puisse la réutiliser. Ce plugin la reconstruit et y ajoute
-les favoris épinglés, le statut de connexion en direct, le glisser-déposer
-entre dossiers, des espaces de travail nommés, la gestion des tunnels SSH, des
-snippets, des notes, et un explorateur SFTP complet qui occupe l'espace de la
-sidebar et suit l'onglet SSH ayant le focus.
+qu'un plugin tiers puisse la réutiliser. Le projet amont la reconstruit ; ce
+fork conserve cette base et les fonctionnalités décrites ci-dessous.
 
 **Chaque bloc est indépendant, et chacun se désactive** depuis l'onglet de
 réglages du plugin — si vous n'utilisez jamais les tunnels SSH ni les espaces
@@ -29,24 +53,22 @@ de travail, éteignez ces deux-là et la sidebar s'allège d'autant. Rien n'est
 supprimé pour autant : vos favoris, espaces de travail et snippets restent
 exactement où ils sont, ils cessent simplement d'être affichés.
 
-## 🧩 Better Tabby, la famille de plugins
+## 🧩 Compatibilité Better Tabby
 
-Ce plugin est l'une des deux moitiés de **Better Tabby**, une petite famille de
-plugins indépendants qui partagent un seul onglet de réglages au lieu d'en
-disperser plusieurs :
+Ce fork conserve le contrat d'intégration utilisé par le plugin amont
+[tabby-better-vault](https://github.com/TooMuhtsh/tabby-better-vault) pour
+partager un seul onglet de réglages **Better Tabby**. Les projets restent
+indépendants : aucun ne nécessite l'autre, sans code partagé ni dépendance npm.
 
 | | Plugin | Apporte |
 |---|---|---|
-| 📁 | **tabby-better-sidebar** *(ce dépôt)* | Favoris épinglés, statut de connexion en direct, glisser-déposer, espaces de travail, explorateur SFTP contextuel |
+| 📁 | **tabby-sidebar-lebedev** *(ce fork)* | Favoris épinglés, statut de connexion en direct, glisser-déposer, espaces de travail, explorateur SFTP contextuel |
 | 🔐 | **[tabby-better-vault](https://github.com/TooMuhtsh/tabby-better-vault)** | Déverrouillage automatique du coffre-fort via le trousseau du système |
 
-**Aucun des deux n'a besoin de l'autre.** N'installez que celui-ci et il se
-comporte exactement comme si l'autre n'existait pas — son propre onglet de
-réglages, rien de partagé. Installez les deux, et ils élisent l'un d'entre eux
-pour porter un unique onglet **Better Tabby**, chacun continuant d'y rendre sa
-propre page. Aucune dépendance npm entre les deux dépôts, aucun code commun :
-juste un petit contrat de chaîne (`BetterPanelContribution:<id>`) que chaque
-plugin reconnaît de son côté.
+Lorsque les deux sont installés, ils élisent un plugin pour porter l'onglet
+partagé et chacun y affiche sa propre page de réglages. Installé seul, chacun
+garde son propre onglet. L'intégration repose uniquement sur le petit contrat
+de chaîne (`BetterPanelContribution:<id>`), sans code partagé ni dépendance npm.
 
 ## ✨ L'arbre des profils
 
@@ -58,6 +80,9 @@ plugin reconnaît de son côté.
 - **Section « Sessions actives »** en haut, une ligne par volet plutôt que par
   onglet, avec le temps de connexion, un clic pour donner le focus et un
   raccourci vers la vue SFTP de cette session
+- **Informations système** : suit la session SSH sélectionnée et affiche les
+  mesures Linux en direct : processeur, mémoire, swap, processus, trafic réseau
+  par interface et systèmes de fichiers locaux
 - **Profils récents** — les cinq derniers lancés, tous types confondus
   (désactivé par défaut)
 - **Glisser-déposer** pour réorganiser — profils et dossiers, y compris déplacer
@@ -113,6 +138,13 @@ dans un fichier séparé : elles ne coûtent rien au démarrage.
 L'explorateur remplace l'arbre des profils dans l'espace de la sidebar et suit
 l'onglet SSH ayant le focus — chaque onglet se souvient d'où il en était, et la
 vue peut être **figée** sur une session pour cesser de suivre le focus.
+Un bouton facultatif de la barre d'outils suit le répertoire de travail signalé
+par le terminal ; désactivez-le pour naviguer librement. Le shell distant doit
+signaler son chemin actuel. Sélectionner un fil d’Ariane interrompt le suivi
+pour garder le dossier choisi ouvert ; un clic droit copie le chemin distant complet.
+
+Lorsque le suivi est activé, l'explorateur suit aussi le répertoire de travail
+du terminal. Le bouton de ciblage à côté d'Actualiser active ou désactive ce suivi.
 
 - **Colonnes configurables** (taille, date, permissions en octal et en format
   long, type, extension), tri dossiers d'abord, affichage des fichiers cachés,
@@ -128,12 +160,20 @@ vue peut être **figée** sur une session pour cesser de suivre le focus.
 - **Sélection multiple**, fichiers *et* dossiers, pour supprimer ou déplacer par
   lot
 - **Chargement par blocs** des listings volumineux
-- **Le double-clic ouvre un fichier dans un éditeur de code**, jamais via
-  l'association de fichiers du système — double-cliquer un exécutable l'édite au
-  lieu de le lancer. L'enregistrement renvoie le fichier automatiquement, après
-  avoir vérifié que la copie distante n'a pas changé entre-temps, et restaure
-  ses permissions. Les liens symboliques sont résolus : c'est la cible qui est
-  éditée, pas le lien
+- **Le double-clic ouvre le texte UTF-8 dans l'éditeur intégré au plugin par
+  défaut**, sans lancer un éditeur externe ni afficher de dialogue de
+  téléchargement. L'enregistrement vérifie les changements distants et
+  conserve le BOM, les fins de ligne et les permissions. Un réglage permet de
+  privilégier l'éditeur système configuré ; **Ouvrir avec…** reste disponible
+  ponctuellement dans le menu contextuel. L'éditeur intégré accepte le texte
+  UTF-8 jusqu'à 2 Mio ; utilisez l'éditeur système pour les fichiers binaires,
+  d'un autre encodage ou plus volumineux. Les liens symboliques sont résolus :
+  c'est la cible qui est éditée, pas le lien
+- La fenêtre d'édition est déplaçable, redimensionnable et non modale : le
+  terminal reste utilisable pour copier des commandes pendant la modification
+- L'éditeur vérifie et formate JSON, YAML, INI, XML et HTML. Les erreurs de
+  syntaxe affichent la ligne et la colonne ; cliquez sur une erreur pour y aller.
+  Enregistrer avec des erreurs demande une confirmation
 - **« Ouvrir avec… »** reste disponible, mais seulement depuis le menu contextuel
 - **Créer, renommer et supprimer** des entrées — touche `Suppr` comprise, avec
   une confirmation HTML dont vous choisissez le bouton par défaut dans les
@@ -149,6 +189,16 @@ vue peut être **figée** sur une session pour cesser de suivre le focus.
 - **Rafraîchissement automatique** du listing, optionnel, désactivé par défaut
 - **Retour automatique** à la vue Profils dès qu'aucun onglet n'a plus de
   session SFTP active
+
+## 🖥️ Informations système
+
+La vue de la sidebar suit la session SSH sélectionnée. Elle affiche la durée de
+fonctionnement et la charge Linux, l'utilisation CPU et mémoire, le swap, les
+processus les plus gourmands, l'historique du trafic par interface réseau et
+les systèmes de fichiers locaux montés. L'actualisation a lieu toutes les deux
+secondes, par une commande SSH en lecture seule sur un canal distinct, sans
+agent distant ni écriture dans le terminal interactif. Linux `/proc`, `ps` et
+`df` sont nécessaires.
 
 ## 📝 Snippets, notes et partage
 
@@ -191,7 +241,7 @@ l'anglais.
 **Nécessite Tabby 1.0.231 ou plus récent.** Développé et testé sur **Tabby
 1.0.238**, la version stable actuelle.
 
-Dans Tabby, ouvrir **Paramètres → Plugins**, chercher `better-sidebar`,
+Dans Tabby, ouvrir **Paramètres → Plugins**, chercher `tabby-sidebar-lebedev`,
 l'installer, puis relancer Tabby entièrement.
 
 <details>
@@ -200,7 +250,7 @@ l'installer, puis relancer Tabby entièrement.
 ```bash
 # Dans le dossier de plugins de Tabby : %APPDATA%\tabby\plugins sur Windows,
 # ~/.config/tabby/plugins sur macOS/Linux
-npm install tabby-better-sidebar
+npm install tabby-sidebar-lebedev
 ```
 
 Puis relancer Tabby entièrement.
@@ -234,6 +284,7 @@ sous `sidebarPlus` dans le `config.yaml` de Tabby.
 | `wrapNames` | `false` | Noms longs sur deux lignes au plus, au lieu d'une ligne coupée |
 | `wrapNamesUnlimited` | `false` | Avec `wrapNames` allumé, sans limite de lignes. Le nom s'affiche en entier, quelle que soit sa longueur |
 | `showSftp` | `true` | L'onglet SFTP de la sidebar et son panneau |
+| `showSystemInfo` | `true` | L'onglet d'informations système Linux de la sidebar |
 | `showTransfers` | `true` | Gestionnaire de transferts en bas de la sidebar |
 | `showSnippets` | `true` | L'entrée *Snippets* du clic droit et son onglet |
 | `showNotes` | `true` | L'entrée *note* du clic droit et son badge |
@@ -247,11 +298,14 @@ personne ne regarde.
 | Réglage | Défaut | Effet |
 |---|---|---|
 | `hideNativeTransfersMenu` | `true` | Masque le menu des transferts de Tabby, qui montre les mêmes transferts |
+| `hideNativeSftpButton` | `false` | Masque les boutons intégrés de Tabby et de SFTP+ dans les barres d'outils SSH |
 | `workspaceSelectorMode` | `tabs` | Barre des espaces de travail en onglets, ou en liste déroulante |
 | `pingIntervalSeconds` | `0` | Intervalle de la sonde de latence ; `0` la désactive |
 | `sftpAutoRefreshSeconds` | `0` | Relit le dossier courant à intervalle régulier ; `0` désactive |
 | `sftpAutoReturnToProfiles` | `true` | Revient à la vue Profils quand plus aucune session SSH n'est ouverte |
-| `sftpEditorPath` | *(vide)* | Programme ouvert au double-clic. Vide, Windows décide |
+| `sftpFollowTerminalDirectory` | `true` | Mémorise si la vue SFTP suit le dossier courant du terminal |
+| `sftpPreferSystemEditor` | `false` | Utilise l'éditeur système configuré au lieu de l'éditeur intégré ; les anciens chemins d'éditeur configurés conservent le comportement précédent |
+| `sftpEditorPath` | *(vide)* | Chemin du programme utilisé en mode éditeur système |
 | `sftpDeleteDefaultButton` | `cancel` | Bouton activé par <kbd>Entrée</kbd> dans la confirmation de suppression SFTP |
 | `sftpDragOutFolders` | `false` | Autorise le glisser d'un *dossier* vers le système, et pas seulement d'un fichier |
 | `sftpColumns` | `size`, `date`, `mode` | Colonnes affichées dans le listing SFTP |
@@ -272,6 +326,8 @@ réglages : rien de ce qui précède ne les supprime.
 
 ## ⚠️ Limites connues
 
+- **L'éditeur intégré traite le texte UTF-8 jusqu'à 2 Mio.** Pour les fichiers plus grands, binaires ou d'un autre encodage, utilisez le mode éditeur système ou « Ouvrir avec… ».
+
 - **L'édition distante ne verrouille rien.** Le plugin vérifie que le fichier
   distant n'a pas changé avant de renvoyer votre modification, et refuse
   d'écraser si c'est le cas — mais deux personnes qui éditent le même fichier en
@@ -290,8 +346,8 @@ réglages : rien de ce qui précède ne les supprime.
 ## 🛠️ Développement
 
 ```bash
-git clone https://github.com/TooMuhtsh/tabby-better-sidebar
-cd tabby-better-sidebar
+git clone https://github.com/dlebedev/tabby-better-sidebar-lebedev
+cd tabby-sidebar-lebedev
 npm install --ignore-scripts   # évite des postinstall qui compilent du natif inutile ici
 npm run watch
 ```
@@ -301,7 +357,7 @@ pas utiliser la variable d'environnement `TABBY_PLUGINS` — elle est cassée su
 Windows :
 
 ```powershell
-New-Item -ItemType Junction -Path "$env:APPDATA\tabby\plugins\node_modules\tabby-better-sidebar" -Target "<chemin-de-ce-dossier>"
+New-Item -ItemType Junction -Path "$env:APPDATA\tabby\plugins\node_modules\tabby-sidebar-lebedev" -Target "<chemin-de-ce-dossier>"
 ```
 
 Relancer Tabby entièrement après chaque reconstruction — recharger la fenêtre ne
@@ -310,17 +366,21 @@ suffit pas, l'état du chargeur de plugins étant global au processus.
 ## Voir aussi
 
 [**tabby-better-vault**](https://github.com/TooMuhtsh/tabby-better-vault) — le
-plugin frère, voir [Better Tabby](#-better-tabby-la-famille-de-plugins)
+plugin compagnon amont, voir [Compatibilité Better Tabby](#-compatibilite-better-tabby)
 ci-dessus.
 
-[**Documentation de gouvernance IA**](https://toomuhtsh.github.io/tabby-better-sidebar/.AIRules/README.html) —
-ce plugin est développé avec un assistant IA sous une charte de gouvernance
-écrite, et le dossier de travail complet est public : invariants et pièges
-numérotés, journal de développement, roadmap et registre de tout ce qui a été
-livré, consultables comme un petit site statique.
+[**Documentation de gouvernance IA du projet amont**](https://toomuhtsh.github.io/tabby-better-sidebar/.AIRules/README.html) —
+le projet d'origine publie sa charte de développement, ses invariants, son
+journal, sa roadmap et son registre de livraisons sur un site statique.
 
 ## Crédits
 
+- [TooMuhtsh/tabby-better-sidebar](https://github.com/TooMuhtsh/tabby-better-sidebar) —
+  le projet amont dont ce fork est issu ; son copyright MIT et sa licence sont
+  conservés
+- [wzwwzb/tabby-better-sidebar-plus](https://github.com/wzwwzb/tabby-better-sidebar-plus) —
+  le fork dont ce fork reprend la vue des informations système, l'éditeur de
+  texte intégré et le suivi du répertoire SFTP
 - [Tabby](https://github.com/Eugeny/tabby) d'Eugeny — le terminal que ce plugin
   étend ; sa sidebar de profils native est le point de départ de celle-ci
   (MIT, voir [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md))

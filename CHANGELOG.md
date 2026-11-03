@@ -1,7 +1,26 @@
 # Changelog
 
-All notable changes to `tabby-better-sidebar` are documented here, one entry
-per npm release. Dates are the npm publication dates.
+This fork is published as `tabby-sidebar-lebedev` and stays on the 1.0.x
+version line of the original `tabby-better-sidebar` fork. The 2.x sections
+below record the feature work of the `tabby-better-sidebar-plus` fork, merged
+in here; the 1.x entries are inherited upstream history.
+
+## 2.0.2 — 2026-10-09
+
+- **Changed** the npm package description to Chinese while clearly crediting the upstream project.
+- **Improved** npm search metadata with exact package-name and feature keywords.
+- **Added** a movable, resizable, modeless built-in UTF-8 text editor for SFTP double-clicks, with explicit remote save, conflict checks, and a setting to prefer the configured system editor.
+- **Added** syntax checks and formatting for JSON, YAML, INI, XML and HTML in the built-in editor, with line and column diagnostics and a confirmation before saving invalid content.
+- **Reduced** the offline dashboard-icon asset by normalizing SVG path and transform data without removing icons or color variants.
+
+## 2.0.1 — 2026-10-09
+
+- **Forked** from TooMuhtsh/tabby-better-sidebar; the inherited upstream
+  release history follows below.
+- **Added** the Linux system-information view, persistent SFTP terminal-directory
+  tracking, and settings to hide SFTP toolbar buttons.
+- **Changed** the package name, repository links and sidebar footer branding to
+  tabby-better-sidebar-plus by wzwwzb.
 
 ## 1.0.10 (2026-11-01)
 

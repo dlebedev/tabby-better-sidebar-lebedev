@@ -518,6 +518,7 @@ export class SidebarPlusSftpComponent implements OnInit, OnDestroy {
             // is what triggers the first change detection pass, and that is
             // where ngOnInit() reads `session` to open the SFTP channel.
             ref.instance.session = tab.sshSession!
+            ref.instance.terminalSession = tab.session
             // Same fallback rule as the sessions list: the user's own rename
             // first, then the profile, then the live title. Shown on the
             // transfer lines this panel starts, so they can say whose they are.
@@ -533,8 +534,8 @@ export class SidebarPlusSftpComponent implements OnInit, OnDestroy {
             if (path) {
                 ref.instance.path = path
             }
-            // Suppresses the panel's "working directory detection" tip banner,
-            // which needs a shell session we deliberately don't reach for here.
+            // This sidebar has its own directory-tracking button, so Tabby's
+            // native SFTP hint is not shown.
             ref.instance.cwdDetectionAvailable = false
             // Favorite folders are stored per profile — a path means nothing
             // on another server. A quick-connect tab has no profile id; the
@@ -545,6 +546,7 @@ export class SidebarPlusSftpComponent implements OnInit, OnDestroy {
         }
         this.appRef.attachView(ref.hostView)
         this.panelContainer.nativeElement.appendChild(this.rootNodeOf(ref))
+        ref.instance.setPanelActive(true)
     }
 
     /**
@@ -556,6 +558,7 @@ export class SidebarPlusSftpComponent implements OnInit, OnDestroy {
         if (!ref) {
             return
         }
+        ref.instance.setPanelActive(false)
         this.rootNodeOf(ref).remove()
         this.appRef.detachView(ref.hostView)
     }
@@ -567,6 +570,7 @@ export class SidebarPlusSftpComponent implements OnInit, OnDestroy {
     }
 
     private destroyPanel (ref: ComponentRef<SidebarPlusSftpBrowserComponent>): void {
+        ref.instance.setPanelActive(false)
         this.rootNodeOf(ref).remove()
         this.appRef.detachView(ref.hostView)
         ref.destroy()
